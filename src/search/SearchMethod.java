@@ -2,6 +2,7 @@ package search;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Stack;
@@ -11,6 +12,8 @@ public abstract class SearchMethod {
 	 * A boolean type variable to check if the search succeed.
 	 */
 	public static boolean find = false;
+	public static Node front;
+	public static Node back;
 
 	/**
 	 * Check if node has been explored.
@@ -118,8 +121,10 @@ public abstract class SearchMethod {
 	 * @param explored
 	 *            Array list that stored all explored nodes
 	 */
-	public static void printOutput(Node current, Node start, Node goal, ArrayList<Node> explored) {
+	public static void printOutput(Node current, Node back, Node start, Node goal, ArrayList<Node> explored,
+			ArrayList<Node> back_explored) {
 		Node path = current;
+		Node backpath = back;
 		ArrayList<int[]> Path = new ArrayList<>();
 		Path.add(path.getLocation()); // Get goal position
 		// Put path of coordinates in to an array list of output
@@ -130,9 +135,17 @@ public abstract class SearchMethod {
 				break;
 			}
 		}
+		Collections.reverse(Path);
+		while (backpath.getParent() != null) {
+			Path.add(backpath.parent.getLocation());
+			backpath = backpath.parent;
+			if (Arrays.equals(backpath.getLocation(), goal.getLocation())) {
+				break;
+			}
+		}
 		// Print the path of coordinates
 		System.out.println("Find path from " + start.getValue() + " to " + goal.getValue());
-		for (int i = Path.size() - 1; i >= 0; i--) {
+		for (int i = 0; i < Path.size(); i++) {
 			System.out.print(Arrays.toString(Path.get(i)));
 		}
 		System.out.println("\nPath length: " + (Path.size() - 1));
@@ -142,6 +155,12 @@ public abstract class SearchMethod {
 		System.out.println("Explored " + explored.size() + " position");
 		for (int j = 0; j < explored.size(); j++) {
 			System.out.print(Arrays.toString(explored.get(j).getLocation()));
+		}
+		System.out.println();
+		back_explored.remove(0);
+		System.out.println("Back explored " + back_explored.size() + " position");
+		for (int j = 0; j < back_explored.size(); j++) {
+			System.out.print(Arrays.toString(back_explored.get(j).getLocation()));
 		}
 		System.out.println("\n");
 	}
@@ -193,7 +212,7 @@ public abstract class SearchMethod {
 		str.replace(str.length() - 2, str.length(), "}");
 		System.out.println(str);
 	}
-	
+
 	/**
 	 * Method to show explored node.
 	 * 
@@ -208,5 +227,145 @@ public abstract class SearchMethod {
 		}
 		str.replace(str.length() - 2, str.length(), "}");
 		System.out.println(str);
+	}
+
+	/**
+	 * Method for Breath-first search to check if new generated child nodes have
+	 * been explored by the other direction of search.
+	 * 
+	 * @param frontier
+	 *            Front direction search frontiers
+	 * @param back_frontier
+	 *            Back direction search frontiers
+	 * @param explored
+	 *            Array List of explored nodes of front direction
+	 * @param back_explored
+	 *            Array List of explored nodes of back direction
+	 * @return Return true if new generated node have been explored by the other
+	 *         direction
+	 */
+	public static boolean bidirectionalCheck(Queue<Node> frontier, Queue<Node> back_frontier, ArrayList<Node> explored,
+			ArrayList<Node> back_explored) {
+		// Set array list to store location of explored nodes
+		ArrayList<int[]> fexplored = new ArrayList<>();
+		ArrayList<int[]> bexplored = new ArrayList<>();
+		for (Node fe : explored) {
+			fexplored.add(fe.getLocation());
+		}
+		for (Node be : back_explored) {
+			bexplored.add(be.getLocation());
+		}
+		// Check if nodes in front direction frontier has been explored by back
+		// direction
+		for (Node node : frontier) {
+			for (int i = 0; i < bexplored.size(); i++) {
+				if (Arrays.equals(node.getLocation(), bexplored.get(i))) {
+					front = node;
+					for (Node bn : back_explored) {
+						if (Arrays.equals(front.getLocation(), bn.getLocation())) {
+							back = bn;
+						}
+					}
+					return true;
+				}
+			}
+		}
+		// Check if nodes in back direction frontier has been explored by front
+		// direction
+		for (Node node : back_frontier) {
+			for (int j = 0; j < fexplored.size(); j++) {
+				if (Arrays.equals(node.getLocation(), fexplored.get(j))) {
+					back = node;
+					for (Node fn : explored) {
+						if (Arrays.equals(back.getLocation(), fn.getLocation())) {
+							front = fn;
+						}
+					}
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Method for Depth-first search to check if new generated child nodes have
+	 * been explored by the other direction of search.
+	 * 
+	 * @param frontier
+	 *            Front direction search frontiers
+	 * @param back_frontier
+	 *            Back direction search frontiers
+	 * @param explored
+	 *            Array List of explored nodes of front direction
+	 * @param back_explored
+	 *            Array List of explored nodes of back direction
+	 * @return Return true if new generated node have been explored by the other
+	 *         direction
+	 */
+	public static boolean bidirectionalDCheck(Stack<Node> frontier, Stack<Node> back_frontier, ArrayList<Node> explored,
+			ArrayList<Node> back_explored) {
+		// Set array list to store location of explored nodes and frontiers
+		ArrayList<int[]> fexplored = new ArrayList<>();
+		ArrayList<int[]> bexplored = new ArrayList<>();
+		ArrayList<int[]> fft = new ArrayList<>();
+		ArrayList<int[]> bft = new ArrayList<>();
+		for (Node fe : explored) {
+			fexplored.add(fe.getLocation());
+		}
+		for (Node be : back_explored) {
+			bexplored.add(be.getLocation());
+		}
+		for (Node ft : frontier) {
+			fft.add(ft.getLocation());
+		}
+		for (Node bf : back_frontier) {
+			bft.add(bf.getLocation());
+		}
+		// Check if nodes in front direction frontier has been explored by back
+		// direction
+		for (Node node : frontier) {
+			for (int i = 0; i < bexplored.size(); i++) {
+				if (Arrays.equals(node.getLocation(), bexplored.get(i))) {
+					front = node;
+					for (Node bn : back_explored) {
+						if (Arrays.equals(front.getLocation(), bn.getLocation())) {
+							back = bn;
+						}
+					}
+					return true;
+				}
+			}
+		}
+		// Check if nodes in back direction frontier has been explored by front
+		// direction
+		for (Node node : back_frontier) {
+			for (int j = 0; j < fexplored.size(); j++) {
+				if (Arrays.equals(node.getLocation(), fexplored.get(j))) {
+					back = node;
+					for (Node fn : explored) {
+						if (Arrays.equals(back.getLocation(), fn.getLocation())) {
+							front = fn;
+						}
+					}
+					return true;
+				}
+			}
+		}
+		// Check if node in both frontiers has a match
+		for(Node node: frontier){
+			for(int k = 0; k < bft.size(); k++){
+				if(Arrays.equals(node.getLocation(), bft.get(k))){
+					front = node;
+					for(Node bn: back_frontier){
+						if (Arrays.equals(front.getLocation(), bn.getLocation())) {
+							back = bn;
+						}
+					}
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }
