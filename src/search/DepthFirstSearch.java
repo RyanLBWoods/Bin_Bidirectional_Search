@@ -32,6 +32,7 @@ public class DepthFirstSearch extends SearchMethod {
 		// Add start to explored list to avoid null pointer exception
 		explored.add(start);
 		back_explored.add(goal);
+		
 		// Search
 		while (!frontier.isEmpty() && !back_frontier.isEmpty()) {
 			Node current = frontier.pop();

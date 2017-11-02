@@ -58,42 +58,48 @@ public class AStarSearch extends SearchMethod {
 		// Add start to explored list to avoid null pointer exception
 		explored.add(start);
 		back_explored.add(goal);
-
+		// Search
 		while (!frontier.isEmpty() && !back_frontier.isEmpty()) {
 			Node current = frontier.remove();
 			Node back = back_frontier.remove();
 			System.out.println("Current node: " + Arrays.toString(current.getLocation()));
-			if (Arrays.equals(current.getLocation(), back.getLocation())) {
-				find = true;
-				System.out.println("match");
-				printOutput(current, back, start, goal, explored, back_explored);
-				break;
-			} else {
-				findChild(current, map, childs, explored);
-				findChild(back, map, back_childs, back_explored);
-				// Insert nodes to frontier
-				if (!current.getChildren().isEmpty()) {
-					frontier.addAll(current.getChildren());
-					childs.addAll(current.getChildren());
-				}
-				showFrontier(frontier);
-				explored.add(current);
-				showExplored(explored);
-				if (!back.getBackChildren().isEmpty()) {
-					back_frontier.addAll(back.getBackChildren());
-					back_childs.addAll(back.getBackChildren());
-				}
-				System.out.println("Back current node: " + Arrays.toString(back.getLocation()));
-				showFrontier(back_frontier);
-				back_explored.add(back);
-				showExplored(back_explored);
-				System.out.println();
+			findChild(current, map, childs, explored);
+			findChild(back, map, back_childs, back_explored);
+			// Insert nodes to frontier
+			if (!current.getChildren().isEmpty()) {
+				frontier.addAll(current.getChildren());
+				childs.addAll(current.getChildren());
 			}
+			showFrontier(frontier);
+			explored.add(current);
+			showExplored(explored);
+			if (!back.getBackChildren().isEmpty()) {
+				back_frontier.addAll(back.getBackChildren());
+				back_childs.addAll(back.getBackChildren());
+			}
+			System.out.println("Back current node: " + Arrays.toString(back.getLocation()));
+			showFrontier(back_frontier);
+			back_explored.add(back);
+			showExplored(back_explored);
+			System.out.println();
 			// Check if there is any match
-			if (Arrays.equals(current.getLocation(), back_frontier.peek().getLocation())) {
-				find = true;
-				System.out.println("Match!!!");
-				printOutput(current, back_frontier.peek(), start, goal, explored, back_explored);
+			if (!frontier.isEmpty() && !back_frontier.isEmpty()) {
+				if (Arrays.equals(current.getLocation(), back_frontier.peek().getLocation())) {
+					find = true;
+					System.out.println("Match!!!");
+					printOutput(current, back_frontier.peek(), start, goal, explored, back_explored);
+					break;
+				}
+				if (bidirectionalCheck(frontier, back_frontier, explored, back_explored)) {
+					find = true;
+					System.out.println("Match!!!");
+					Node front = SearchMethod.front;
+					Node b = SearchMethod.back;
+					printOutput(front, b, start, goal, explored, back_explored);
+					break;
+				}
+			} else {
+				System.out.println("Search failed");
 				break;
 			}
 		}
